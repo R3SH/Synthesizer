@@ -89,7 +89,7 @@ struct sEnvelopeADSR
 			//Decay
 			if (dLifeTime > dAttackTime && dLifeTime <= (dAttackTime + dDecayTime))
 				dAmplitude = ((dLifeTime - dAttackTime) / dDecayTime) * (dSustainAmplitude - dStartAmplitude) + dStartAmplitude;
-		
+
 			//Sustain
 			if (dLifeTime > (dAttackTime + dDecayTime))
 				dAmplitude = dSustainAmplitude;
@@ -122,18 +122,17 @@ struct sEnvelopeADSR
 	}
 };
 
-atomic<double> dFrequencyOutput = 0.0;
-double dOctaveBaseFrequency = 110.0;
-double d12thRootOf2 = pow(2.0, 1.0 / 12.0);
-sEnvelopeADSR envelope;
-
 struct instrument
 {
-	double dVolume;
+	double dVolume = 0.5;
 	sEnvelopeADSR env;
 	virtual double sound(double dTime, double dFrequency) = 0;
 };
 
+atomic<double> dFrequencyOutput = 0.0;
+sEnvelopeADSR envelope;
+double dOctaveBaseFrequency = 110.0;
+double d12thRootOf2 = pow(2.0, 1.0 / 12.0);
 
 struct bell : public instrument
 {
@@ -150,7 +149,7 @@ struct bell : public instrument
 
 	double sound(double dTime, double dFrequency)
 	{
-		double dOutput = envelope.GetAmplitude(dTime) *
+		double dOutput = env.GetAmplitude(dTime) *
 			(
 			+1.0 * osc(dFrequencyOutput * 2.0, dTime, OSC_SINE, 5.0, 0.001)
 			+ 0.5 * osc(dFrequencyOutput * 3.0, dTime, OSC_SINE)
@@ -161,22 +160,64 @@ struct bell : public instrument
 	}
 };
 
+struct harmonica : public instrument
+{
+	harmonica()
+	{
+		env.dAttackTime = 0.100;
+		env.dDecayTime = 0.01;
+		env.dReleaseTime = 1.0;
+		env.dSustainAmplitude = 0.8;
+		env.dStartAmplitude = 0.200;
+		env.dTriggerOnTime = 0.0;
+		env.dTriggerOffTime = 0.0;
+
+		dVolume = 1.0;
+	}
+
+	double sound(double dTime, double  dFrequency)
+	{
+		double dOutput = env.GetAmplitude(dTime) *
+			(
+				+ 1.0 * osc(dFrequencyOutput, dTime, OSC_SQUARE, 5.0, 0.001)
+				+ 0.5 * osc(dFrequencyOutput * 1.5, dTime, OSC_SQUARE)
+				+ 0.25 * osc(dFrequencyOutput * 2.0, dTime, OSC_SQUARE)
+				+ 0.05 * osc(0, dTime, OSC_NOISE)
+			);
+		
+		return dOutput;
+	}
+};
+
+struct piano : public instrument
+{
+	piano()
+	{
+		env.dAttackTime = 0.100;
+		env.dDecayTime = 0.01;
+		env.dReleaseTime = 0.01;
+		env.dSustainAmplitude = 0.8;
+		env.dStartAmplitude = 0.200;	
+	}
+
+	double sound(double dTime, double dFrequency)
+	{
+		double dOutput = env.GetAmplitude(dTime) *
+			(
+				+ 1.0 * osc(dFrequencyOutput * 2.0, dTime, OSC_SAW_OP, 5.0, 0.01)
+				+ 4.0 * osc(dFrequencyOutput * 1.0, dTime, OSC_TRIANGLE)
+				+ 0.5 * osc(dFrequencyOutput * 3.0, dTime, OSC_SINE)
+				+ 0.02 * osc(0, dTime, OSC_NOISE)
+			);
+
+		return dOutput;
+	}
+};
+
 instrument *voice = nullptr;
 
-double MakeNoise( double dTime)
+double MakeNoise(double dTime)
 {
-	//double dOutput = envelope.GetAmplitude(dTime) *
-	//	(
-	//		+ 1.0 * osc(dFrequencyOutput, dTime, OSC_SQUARE, 5.0, 0.001)
-	//		+ 0.5 * osc(dFrequencyOutput * 1.5, dTime, OSC_SQUARE)
-	//		+ 0.25 * osc(dFrequencyOutput * 2.0, dTime, OSC_SQUARE)
-	//		+ 0.05 * osc(0, dTime, OSC_NOISE)		//Harmonica
-
-	//		+1.0 * osc(dFrequencyOutput * 2.0, dTime, OSC_SINE, 5.0, 0.001)
-	//		+ 0.5 * osc(dFrequencyOutput * 3.0, dTime, OSC_SINE)
-	//		+ 0.25 * osc(dFrequencyOutput * 4.0, dTime, OSC_SINE)
-	//	);
-
 	double dOutput = voice->sound(dTime, dFrequencyOutput);
 
 	return dOutput * 0.05;		//Master volume
@@ -194,12 +235,13 @@ int main()
 		"|   |___|   |   |___| |___|   |   |___| |___| |___|   |   |__" << endl <<
 		"|     |     |     |     |     |     |     |     |     |     |" << endl <<
 		"|  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |" << endl <<
-		"|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|" << endl << endl;
+		"|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|" << endl << 
+		"\nPress '1' for harmonica(default),'2' for Bell and '3' for Piano" << endl << endl;
 
 
 	olcNoiseMaker<short> sound(devices[0], 44100, 1, 8, 512);
 
-	voice = new bell();
+	voice = new harmonica();
 
 	sound.SetUserFunction(MakeNoise);
 
@@ -237,8 +279,17 @@ int main()
 				nCurrentKey = -1;
 			}
 		}
+
+		if (GetAsyncKeyState((unsigned char)'1') & 0x8000)
+			voice = new harmonica();
+
+		if (GetAsyncKeyState((unsigned char)'2') & 0x8000)
+			voice = new bell();
+
+		if (GetAsyncKeyState((unsigned char)'3') & 0x8000)
+			voice = new piano();
+
 	}
 
 	return 0;
 }
-
