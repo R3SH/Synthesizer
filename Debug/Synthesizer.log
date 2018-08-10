@@ -1,4 +1,4 @@
-﻿Сборка начата 09.08.2018 3:30:27.
+﻿Сборка начата 10.08.2018 6:00:04.
      1>Проект "H:\C++\Synthesizer\Synthesizer.vcxproj" в узле 2 (целевые объекты Build).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
@@ -10,4 +10,4 @@
 
 Сборка успешно завершена.
 
-Затраченное время: 00:00:07.29
+Затраченное время: 00:00:05.58
