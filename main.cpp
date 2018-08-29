@@ -44,32 +44,32 @@ namespace synth
 		switch (Type)
 		{
 		case OSC_SINE:		//Sine wave
-				return sin(dFreq);
+			return sin(dFreq);
 
 		case OSC_SQUARE:		//Sqare wave
-				return sin(dFreq) > 0.0 ? 1.0 : -1.0;
+			return sin(dFreq) > 0.0 ? 1.0 : -1.0;
 
 		case OSC_TRIANGLE:		//Triangle wave
-				return asin(sin(dFreq)) * (2.0 / PI);
+			return asin(sin(dFreq)) * (2.0 / PI);
 
 		case OSC_SAW_AN:		//Saw wave (analogue / warm / slow)
 		{
 			FTYPE dOutput = 0.0;
 
 			for (FTYPE n = 1.0; n < 10.0; n++)
-					dOutput += (sin(n * dFreq)) / n;
+				dOutput += (sin(n * dFreq)) / n;
 
 			return dOutput * (2.0 / PI);
 		}
 
 		case OSC_SAW_OP:		//Saw wave (optimized / harsh / fast)
-				return (2.0 / PI) * (dHertz * PI * fmod(dTime, 1.0 / dHertz) - (PI / 2.0));
+			return (2.0 / PI) * (dHertz * PI * fmod(dTime, 1.0 / dHertz) - (PI / 2.0));
 
 		case OSC_NOISE:		//Pseudo Random Noise
-				return 2.0 * ((FTYPE)rand() / (FTYPE)RAND_MAX) - 1.0;
+			return 2.0 * ((FTYPE)rand() / (FTYPE)RAND_MAX) - 1.0;
 
 		default:
-				return 0.0;
+			return 0.0;
 		}
 	}
 
@@ -118,15 +118,15 @@ namespace synth
 				// ASD
 				//Attack
 				if (dLifeTime <= dAttackTime)
-						dAmplitude = (dLifeTime / dAttackTime) * dStartAmplitude;
+					dAmplitude = (dLifeTime / dAttackTime) * dStartAmplitude;
 
 				//Decay
 				if (dLifeTime > dAttackTime && dLifeTime <= (dAttackTime + dDecayTime))
-						dAmplitude = ((dLifeTime - dAttackTime) / dDecayTime) * (dSustainAmplitude - dStartAmplitude) + dStartAmplitude;
+					dAmplitude = ((dLifeTime - dAttackTime) / dDecayTime) * (dSustainAmplitude - dStartAmplitude) + dStartAmplitude;
 
 				//Sustain
 				if (dLifeTime > (dAttackTime + dDecayTime))
-						dAmplitude = dSustainAmplitude;
+					dAmplitude = dSustainAmplitude;
 			}
 
 			else		//Note is off
@@ -134,20 +134,20 @@ namespace synth
 				FTYPE dLifeTime = dTimeOff - dTimeOn;
 
 				if (dLifeTime <= dAttackTime)
-						dReleaseAmplitude = (dLifeTime / dAttackTime) * dStartAmplitude;
+					dReleaseAmplitude = (dLifeTime / dAttackTime) * dStartAmplitude;
 
 				if (dLifeTime > dAttackTime && dLifeTime <= (dAttackTime + dDecayTime))
-						dReleaseAmplitude = ((dLifeTime - dAttackTime) / dDecayTime) * (dSustainAmplitude - dStartAmplitude) + dStartAmplitude;
+					dReleaseAmplitude = ((dLifeTime - dAttackTime) / dDecayTime) * (dSustainAmplitude - dStartAmplitude) + dStartAmplitude;
 
 				if (dLifeTime > (dAttackTime + dDecayTime))
-						dReleaseAmplitude = dSustainAmplitude;
+					dReleaseAmplitude = dSustainAmplitude;
 
 				//Release
 				dAmplitude = ((dTime - dTimeOff) / dReleaseTime) * (0.0 - dReleaseAmplitude) + dReleaseAmplitude;
 			}
 
 			if (dAmplitude <= 0.000)
-					dAmplitude = 0.0;
+				dAmplitude = 0.0;
 
 
 			return dAmplitude;
@@ -187,9 +187,9 @@ namespace synth
 				bNoteFinished = true;
 
 			FTYPE dSound =
-					+ 1.0 * synth::osc(n.on - dTime, synth::scale(n.id + 12), synth::OSC_SINE, 5.0, 0.001)
-					+ 0.5 * synth::osc(n.on - dTime, synth::scale(n.id + 24))
-					+ 0.25 * synth::osc(n.on - dTime, synth::scale(n.id + 36));
+				+1.0 * synth::osc(n.on - dTime, synth::scale(n.id), synth::OSC_SINE, 5.0, 0.001)
+				+ 0.5 * synth::osc(n.on - dTime, synth::scale(n.id + 12))
+				+ 0.25 * synth::osc(n.on - dTime, synth::scale(n.id + 24));
 
 			return dAmplitude * dSound * dVolume;
 		}
@@ -213,12 +213,12 @@ namespace synth
 			FTYPE dAmplitude = synth::env(dTime, env, n.on, n.off);
 
 			if (dAmplitude <= 0.0)
-					bNoteFinished = true;
+				bNoteFinished = true;
 
 			FTYPE dSound =
-				+ 1.0 * synth::osc(n.on - dTime, synth::scale(n.id + 12), synth::OSC_SQUARE, 5.0, 0.001)
-				+ 0.5 * synth::osc(n.on - dTime, synth::scale(n.id + 24), synth::OSC_SQUARE)
-				+ 0.25 * synth::osc(n.on - dTime, synth::scale(n.id + 36), synth::OSC_SQUARE)
+				+1.0 * synth::osc(n.on - dTime, synth::scale(n.id), synth::OSC_SQUARE, 5.0, 0.001)
+				+ 0.5 * synth::osc(n.on - dTime, synth::scale(n.id + 12), synth::OSC_SQUARE)
+				+ 0.25 * synth::osc(n.on - dTime, synth::scale(n.id + 24), synth::OSC_SQUARE)
 				+ 0.05 * synth::osc(n.on - dTime, dTime, synth::OSC_NOISE);
 
 			return dAmplitude * dSound * dVolume;
@@ -243,11 +243,11 @@ namespace synth
 			FTYPE dAmplitude = synth::env(dTime, env, n.on, n.off);
 
 			if (dAmplitude <= 0.0)
-					bNoteFinished = true;
+				bNoteFinished = true;
 
 			FTYPE dSound =
-					+ 1.0 * synth::osc(n.on - dTime, synth::scale(n.id + 12), synth::OSC_SINE, 5.0, 0.001)
-					+ 0.5 * synth::osc(n.on - dTime, synth::scale(n.id + 24), synth::OSC_SINE);
+				+1.0 * synth::osc(n.on - dTime, synth::scale(n.id), synth::OSC_SINE, 5.0, 0.001)
+				+ 0.5 * synth::osc(n.on - dTime, synth::scale(n.id + 12), synth::OSC_SINE);
 
 			return dAmplitude * dSound * dVolume;
 		}
@@ -304,9 +304,9 @@ FTYPE MakeNoise(FTYPE dTime)
 
 int main()
 {
-	wcout << "Synthesizer" << std::endl;
+	wcout << "Synthesizer" << endl;
 
-	std::vector<std::wstring> devices = olcNoiseMaker<short>::Enumerate();
+	vector<wstring> devices = olcNoiseMaker<short>::Enumerate();
 
 	wcout << endl <<
 		"|   |   |   |   |   | |   |   |   |   | |   | |   |   |   |" << endl <<
@@ -314,8 +314,8 @@ int main()
 		"|   |___|   |   |___| |___|   |   |___| |___| |___|   |   |__" << endl <<
 		"|     |     |     |     |     |     |     |     |     |     |" << endl <<
 		"|  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |" << endl <<
-		"|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|" << endl << 
-		"\nPress '1' for harmonica(default),'2' for Bell and '3' for Piano" << endl << endl;
+		"|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|" << endl << endl;
+		//"\nPress '1' for harmonica(default),'2' for Bell and '3' for Piano" << endl << endl;
 
 
 	olcNoiseMaker<short> sound(devices[0], 44100, 1, 8, 512);
